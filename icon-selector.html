@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>High Energy Hazards</title>
+  <style>
+    :root {
+      --red: #c62828;
+      --red-soft: #fde8e8;
+      --text: #222;
+      --muted: #666;
+      --bg: #f7f7f7;
+      --tile-bg: #fff;
+      --tile-size: 132px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px 12px 96px;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      text-align: center;
+      font-size: 26px;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .hazards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .hazard-card {
+      border: none;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      text-align: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hazard-card:focus-visible .tile {
+      outline: 3px solid rgba(198, 40, 40, 0.28);
+      outline-offset: 3px;
+    }
+
+    .tile {
+      position: relative;
+      background: var(--tile-bg);
+      border: 4px solid var(--red);
+      border-radius: 18px;
+      min-height: 122px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 10px;
+      transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+    }
+
+    .hazard-card:hover .tile {
+      transform: translateY(-1px);
+    }
+
+    .hazard-card.selected .tile {
+      background: var(--red-soft);
+      box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.14);
+    }
+
+    .checkbox {
+      position: absolute;
+      top: 7px;
+      left: 7px;
+      width: 15px;
+      height: 15px;
+      border: 1.5px solid #999;
+      background: #fff;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      line-height: 1;
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .hazard-card.selected .checkbox::after {
+      content: '✓';
+    }
+
+    .tile svg {
+      width: 78px;
+      height: 78px;
+      overflow: visible;
+    }
+
+    .label {
+      margin-top: 7px;
+      font-size: 11px;
+      line-height: 1.22;
+      font-weight: 700;
+      min-height: 40px;
+    }
+
+    .toolbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      padding: 12px;
+      z-index: 9999;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+    }
+
+    .toolbar-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .toolbar button {
+      border: none;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    #clearBtn {
+      background: #e5e7eb;
+      color: #111;
+    }
+
+    #done {
+      background: #007aff;
+      color: #fff;
+      min-width: 150px;
+      font-weight: 700;
+    }
+
+    .count {
+      font-size: 13px;
+      color: var(--muted);
+      min-width: 120px;
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .hazards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 10px;
+      }
+
+      .tile {
+        min-height: 118px;
+        padding: 12px 8px;
+      }
+
+      .tile svg {
+        width: 72px;
+        height: 72px;
+      }
+
+      .label {
+        font-size: 10.5px;
+      }
+
+      .toolbar-inner {
+        justify-content: space-between;
+      }
+
+      .count {
+        order: -1;
+        width: 100%;
+      }
+
+      #clearBtn,
+      #done {
+        flex: 1 1 0;
+      }
+    }
+  </style>
+
+  <script type="text/javascript">
+    (()=>{var s=(e,i)=>()=>(i||e((i={exports:{}}).exports,i),i.exports);var o=s((a,r)=>{var l=new URLSearchParams(location.search);function c(e){try{return JSON.parse(e)}catch(i){return null}}r.exports=window.Fulcrum={isExtension:l.get("extension")==="1",initialize:()=>{var i;let{params:e}=Fulcrum;Fulcrum.id=e==null?void 0:e.id,Fulcrum.url=e==null?void 0:e.url,Fulcrum.data=e==null?void 0:e.data,Fulcrum.origin=e==null?void 0:e.origin,(i=Fulcrum.onLoadOnce)==null||i.call(Fulcrum)},load:e=>{Fulcrum.onLoadOnce=()=>{Fulcrum.params&&!Fulcrum.isLoaded&&(Fulcrum.isLoaded=!0,e({data:Fulcrum.data}))},Fulcrum.onLoadOnce()},send:(e,{close:i=!1}={})=>{var u;e=e!=null?e:{};let n={id:Fulcrum.id,url:Fulcrum.url,data:e,close:i};(u=window.webkit)!=null&&u.messageHandlers?window.webkit.messageHandlers.extensionListener.postMessage(JSON.stringify(n)):window.parent&&window.parent.postMessage({extensionMessage:n},Fulcrum.origin)},receive:e=>{let i=c(e.data);i&&i.command==="initialize"&&!Fulcrum.params&&(Fulcrum.params=i.params,Fulcrum.initialize())},finish:e=>{Fulcrum.send(e,{close:!0})}};Fulcrum.isExtension?window.addEventListener("message",Fulcrum.receive,!1):window.addEventListener("DOMContentLoaded",Fulcrum.initialize)});o();})();
+  </script>
+</head>
+<body>
+  <div class="page">
+    <h1>High Energy Hazards</h1>
+    <p class="subtitle">Select one or more hazards, then tap Done.</p>
+
+    <div id="hazardsGrid" class="hazards-grid"></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div id="selectionCount" class="count">0 selected</div>
+      <button id="clearBtn" type="button">Clear</button>
+      <button id="done" type="button">Done</button>
+    </div>
+  </div>
+
+  <script>
+    const hazards = [
+      { id: 'suspended_loads', label: 'Suspended Loads', icon: iconSuspendedLoads },
+      { id: 'fall_from_elevation', label: 'Fall from\nElevation', icon: iconFall },
+      { id: 'electrical_contact_with_source', label: 'Electrical Contact\nwith Source', icon: iconElectrical },
+      { id: 'arc_flash', label: 'Arc Flash', icon: iconArcFlash },
+      { id: 'mobile_equipment_materials_on_floor', label: 'Mobile Equipment\n& Materials on Floor', icon: iconFloorHazards },
+      { id: 'motor_vehicle_unoccupied', label: 'Motor Vehicle\n(Unoccupied)', icon: iconVehicle },
+      { id: 'equipment_vehicle_rollover', label: 'Equipment/Vehicle\nRollover', icon: iconRollover },
+      { id: 'stored_energy', label: 'Stored Energy', icon: iconStoredEnergy },
+      { id: 'explosion', label: 'Explosion', icon: iconExplosion },
+      { id: 'excavation_or_trench_deeper_than_5ft', label: 'Excavation or\nTrench Deeper\nthan 5 ft', icon: iconExcavation },
+      { id: 'high_dose_toxic_chemical_or_radiation', label: 'High Dose of Toxic\nChemical or Radiation', icon: iconToxic },
+      { id: 'confined_space', label: 'Confined Space', icon: iconConfined },
+      { id: 'steam', label: 'Steam', icon: iconSteam },
+      { id: 'high_temperature', label: 'High Temperature', icon: iconTemperature },
+      { id: 'fire_with_sustained_sources', label: 'Fire with\nSustained Sources', icon: iconFire },
+      { id: 'heavy_rotating_equipment', label: 'Heavy Rotating\nEquipment', icon: iconRotating }
+    ];
+
+    const selectedHazards = new Set();
+
+    function renderHazards() {
+      const grid = document.getElementById('hazardsGrid');
+      grid.innerHTML = '';
+
+      hazards.forEach(hazard => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.id = hazard.id;
+        button.className = 'hazard-card' + (selectedHazards.has(hazard.id) ? ' selected' : '');
+        button.setAttribute('aria-pressed', selectedHazards.has(hazard.id) ? 'true' : 'false');
+        button.innerHTML = `
+          <div class="tile">
+            <div class="checkbox"></div>
+            ${hazard.icon()}
+          </div>
+          <div class="label">${hazard.label.replace(/\n/g, '<br>')}</div>
+        `;
+        button.addEventListener('click', () => toggleHazard(hazard.id));
+        grid.appendChild(button);
+      });
+
+      updateCount();
+    }
+
+    function toggleHazard(id) {
+      if (selectedHazards.has(id)) {
+        selectedHazards.delete(id);
+      } else {
+        selectedHazards.add(id);
+      }
+      renderHazards();
+    }
+
+    function updateCount() {
+      const count = selectedHazards.size;
+      document.getElementById('selectionCount').textContent = `${count} selected`;
+    }
+
+    Fulcrum.load(({ data }) => {
+      if (data.high_energy_hazards) {
+        data.high_energy_hazards
+          .split(',')
+          .map(p => p.trim())
+          .filter(Boolean)
+          .forEach(id => {
+            if (hazards.some(h => h.id === id)) {
+              selectedHazards.add(id);
+            }
+          });
+      }
+      renderHazards();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      selectedHazards.clear();
+      renderHazards();
+    });
+
+    document.getElementById('done').addEventListener('click', () => {
+      Fulcrum.finish({
+        high_energy_hazards: Array.from(selectedHazards).join(', ')
+      });
+    });
+
+    function svg(content, viewBox = '0 0 100 100') {
+      return `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${content}</svg>`;
+    }
+
+    function iconSuspendedLoads() {
+      return svg(`
+        <line x1="50" y1="10" x2="50" y2="24" stroke="#000" stroke-width="4"/>
+        <circle cx="50" cy="8" r="4" fill="#000"/>
+        <line x1="50" y1="24" x2="35" y2="42" stroke="#000" stroke-width="4"/>
+        <line x1="50" y1="24" x2="65" y2="42" stroke="#000" stroke-width="4"/>
+        <rect x="18" y="42" width="64" height="10" fill="#000"/>
+        <rect x="14" y="54" width="72" height="10" fill="#000"/>
+        <rect x="10" y="66" width="80" height="10" fill="#000"/>
+      `);
+    }
+
+    function iconFall() {
+      return svg(`
+        <text x="67" y="18" font-size="16" font-family="Arial" font-weight="700">≥4'</text>
+        <circle cx="28" cy="32" r="8" fill="#000"/>
+        <line x1="35" y1="40" x2="52" y2="48" stroke="#000" stroke-width="6"/>
+        <line x1="50" y1="48" x2="68" y2="40" stroke="#000" stroke-width="6"/>
+        <line x1="49" y1="48" x2="64" y2="63" stroke="#000" stroke-width="6"/>
+        <line x1="40" y1="45" x2="28" y2="58" stroke="#000" stroke-width="6"/>
+        <rect x="6" y="78" width="88" height="5" fill="#000"/>
+      `);
+    }
+
+    function iconElectrical() {
+      return svg(`
+        <text x="8" y="20" font-size="16" font-family="Arial" font-weight="700">≥50 Volts</text>
+        <circle cx="50" cy="58" r="26" fill="#000"/>
+        <path d="M52 34 L36 58 H48 L42 81 L64 52 H52 Z" fill="#fff"/>
+      `);
+    }
+
+    function iconArcFlash() {
+      return svg(`
+        <path d="M58 8 L45 34 H58 L46 57" fill="none" stroke="#000" stroke-width="6"/>
+        <circle cx="24" cy="54" r="8" fill="#000"/>
+        <line x1="24" y1="62" x2="24" y2="80" stroke="#000" stroke-width="6"/>
+        <line x1="24" y1="68" x2="12" y2="78" stroke="#000" stroke-width="6"/>
+        <line x1="24" y1="68" x2="37" y2="78" stroke="#000" stroke-width="6"/>
+        <line x1="24" y1="70" x2="38" y2="56" stroke="#000" stroke-width="6"/>
+        <path d="M52 54 l10 -10 l6 10 l12 -6 l-2 13 l12 4 l-11 7 l6 10 l-13 -1 l-3 12 l-8 -10 l-10 7 l2 -13 l-13 -3 l11 -8 l-6 -9 z" fill="#000"/>
+      `);
+    }
+
+    function iconFloorHazards() {
+      return svg(`
+        <circle cx="35" cy="24" r="12" fill="#000"/>
+        <circle cx="66" cy="24" r="12" fill="#000"/>
+        <circle cx="35" cy="24" r="5" fill="#fff"/>
+        <circle cx="66" cy="24" r="5" fill="#fff"/>
+        <rect x="26" y="38" width="48" height="10" fill="#000"/>
+        <path d="M20 78 q12 -18 24 0 q12 -18 24 0 q12 -18 24 0" fill="none" stroke="#000" stroke-width="5"/>
+      `);
+    }
+
+    function iconVehicle() {
+      return svg(`
+        <text x="10" y="18" font-size="14" font-family="Arial" font-weight="700">≥30 mph</text>
+        <path d="M18 58 h14 l10 -14 h24 l14 14 h6 v14 h-8 a8 8 0 0 1 -16 0 h-24 a8 8 0 0 1 -16 0 h-4 z" fill="#000"/>
+        <circle cx="34" cy="72" r="8" fill="#fff"/>
+        <circle cx="74" cy="72" r="8" fill="#fff"/>
+      `);
+    }
+
+    function iconRollover() {
+      return svg(`
+        <path d="M50 14 A36 36 0 0 1 80 35" fill="none" stroke="#000" stroke-width="5"/>
+        <polygon points="76,26 86,32 75,37" fill="#000"/>
+        <path d="M82 50 A36 36 0 0 1 64 80" fill="none" stroke="#000" stroke-width="5"/>
+        <polygon points="71,75 61,82 62,69" fill="#000"/>
+        <path d="M50 86 A36 36 0 0 1 18 64" fill="none" stroke="#000" stroke-width="5"/>
+        <polygon points="26,68 14,66 22,56" fill="#000"/>
+        <path d="M14 48 A36 36 0 0 1 35 18" fill="none" stroke="#000" stroke-width="5"/>
+        <polygon points="30,25 38,14 41,27" fill="#000"/>
+      `);
+    }
+
+    function iconStoredEnergy() {
+      return svg(`
+        <line x1="34" y1="16" x2="34" y2="50" stroke="#000" stroke-width="6"/>
+        <circle cx="34" cy="58" r="8" fill="#000"/>
+        <line x1="34" y1="66" x2="34" y2="84" stroke="#000" stroke-width="6"/>
+        <line x1="34" y1="72" x2="22" y2="84" stroke="#000" stroke-width="6"/>
+        <line x1="34" y1="72" x2="46" y2="84" stroke="#000" stroke-width="6"/>
+        <line x1="34" y1="40" x2="60" y2="28" stroke="#000" stroke-width="6"/>
+        <polygon points="58,18 84,36 65,58" fill="#000"/>
+      `);
+    }
+
+    function iconExplosion() {
+      return svg(`
+        <path d="M50 12 l8 18 l18 -8 l-8 18 l18 8 l-18 8 l8 18 l-18 -8 l-8 18 l-8 -18 l-18 8 l8 -18 l-18 -8 l18 -8 l-8 -18 l18 8 z" fill="#000"/>
+      `);
+    }
+
+    function iconExcavation() {
+      return svg(`
+        <text x="31" y="18" font-size="16" font-family="Arial" font-weight="700">≥5'</text>
+        <rect x="8" y="22" width="20" height="62" fill="#000"/>
+        <rect x="72" y="22" width="20" height="62" fill="#000"/>
+        <rect x="28" y="50" width="44" height="34" fill="#000"/>
+        <circle cx="48" cy="58" r="7" fill="#fff"/>
+        <line x1="48" y1="65" x2="48" y2="78" stroke="#fff" stroke-width="4"/>
+        <line x1="48" y1="69" x2="40" y2="77" stroke="#fff" stroke-width="4"/>
+        <line x1="48" y1="69" x2="56" y2="77" stroke="#fff" stroke-width="4"/>
+      `);
+    }
+
+    function iconToxic() {
+      return svg(`
+        <line x1="22" y1="84" x2="78" y2="84" stroke="#000" stroke-width="4"/>
+        <path d="M35 26 q-8 10 0 20 q8 10 0 20" fill="none" stroke="#000" stroke-width="4"/>
+        <path d="M50 18 q-8 10 0 20 q8 10 0 20 q-8 10 0 20" fill="none" stroke="#000" stroke-width="4"/>
+        <path d="M65 26 q-8 10 0 20 q8 10 0 20" fill="none" stroke="#000" stroke-width="4"/>
+        <line x1="35" y1="12" x2="35" y2="20" stroke="#000" stroke-width="4"/>
+        <line x1="50" y1="8" x2="50" y2="16" stroke="#000" stroke-width="4"/>
+        <line x1="65" y1="12" x2="65" y2="20" stroke="#000" stroke-width="4"/>
+      `);
+    }
+
+    function iconConfined() {
+      return svg(`
+        <rect x="18" y="18" width="64" height="64" fill="none" stroke="#000" stroke-width="12"/>
+        <circle cx="50" cy="46" r="8" fill="#000"/>
+        <line x1="50" y1="54" x2="50" y2="72" stroke="#000" stroke-width="6"/>
+        <line x1="50" y1="62" x2="38" y2="54" stroke="#000" stroke-width="6"/>
+        <line x1="50" y1="62" x2="62" y2="54" stroke="#000" stroke-width="6"/>
+        <line x1="50" y1="72" x2="40" y2="82" stroke="#000" stroke-width="6"/>
+        <line x1="50" y1="72" x2="60" y2="82" stroke="#000" stroke-width="6"/>
+      `);
+    }
+
+    function iconSteam() {
+      return svg(`
+        <path d="M16 68 q15 -28 34 -22 q-10 7 -7 20 q2 9 18 10 q14 1 23 -9" fill="#000"/>
+        <path d="M18 66 q18 18 48 14" fill="none" stroke="#000" stroke-width="4"/>
+      `);
+    }
+
+    function iconTemperature() {
+      return svg(`
+        <line x1="50" y1="20" x2="50" y2="66" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="50" cy="76" r="14" fill="#000"/>
+        <rect x="40" y="14" width="20" height="54" rx="10" fill="none" stroke="#000" stroke-width="4"/>
+        <text x="25" y="95" font-size="12" font-family="Arial" font-weight="700">≥150°F</text>
+      `);
+    }
+
+    function iconFire() {
+      return svg(`
+        <path d="M52 12 q8 16 -2 28 q14 -4 18 -18 q16 18 6 34 q10 0 14 -10 q8 30 -10 42 q-11 7 -24 7 q-17 0 -29 -12 q-15 -15 -8 -35 q5 -14 18 -22 q1 16 13 20 q-6 -16 4 -34 z" fill="#000"/>
+      `);
+    }
+
+    function iconRotating() {
+      return svg(`
+        <circle cx="32" cy="22" r="8" fill="#000"/>
+        <line x1="32" y1="30" x2="32" y2="58" stroke="#000" stroke-width="6"/>
+        <line x1="32" y1="40" x2="20" y2="50" stroke="#000" stroke-width="6"/>
+        <line x1="32" y1="40" x2="44" y2="50" stroke="#000" stroke-width="6"/>
+        <line x1="32" y1="58" x2="24" y2="80" stroke="#000" stroke-width="6"/>
+        <line x1="32" y1="58" x2="42" y2="78" stroke="#000" stroke-width="6"/>
+        <circle cx="72" cy="58" r="12" fill="#000"/>
+        <circle cx="72" cy="58" r="4" fill="#fff"/>
+        <line x1="72" y1="40" x2="72" y2="28" stroke="#000" stroke-width="5"/>
+        <line x1="72" y1="76" x2="72" y2="88" stroke="#000" stroke-width="5"/>
+        <line x1="54" y1="58" x2="42" y2="58" stroke="#000" stroke-width="5"/>
+        <line x1="90" y1="58" x2="82" y2="58" stroke="#000" stroke-width="5"/>
+        <line x1="60" y1="46" x2="51" y2="37" stroke="#000" stroke-width="5"/>
+        <line x1="84" y1="46" x2="93" y2="37" stroke="#000" stroke-width="5"/>
+        <line x1="60" y1="70" x2="51" y2="79" stroke="#000" stroke-width="5"/>
+        <line x1="84" y1="70" x2="93" y2="79" stroke="#000" stroke-width="5"/>
+      `);
+    }
+
+    renderHazards();
+  </script>
+</body>
+</html>
