@@ -1,0 +1,1344 @@
+{
+  "form": {
+    "name": "Pre-Work Safety Authorization",
+    "description": "Ensure all hazards, authorization, and coordination requirements are addressed before field activity begins.",
+    "record_title_key": "1478",
+    "title_field_keys": [
+      "1478",
+      "b2a0"
+    ],
+    "status_field": {
+      "type": "StatusField",
+      "label": "Status",
+      "key": "@status",
+      "data_name": "status",
+      "default_value": "Incomplete",
+      "enabled": true,
+      "read_only": false,
+      "hidden": false,
+      "description": "",
+      "choices": [
+        {
+          "label": "Incomplete",
+          "value": "Incomplete",
+          "color": "#CB0D0C"
+        },
+        {
+          "label": "In Progress",
+          "value": "In Progress",
+          "color": "#FFD900"
+        },
+        {
+          "label": "Complete",
+          "value": "Complete",
+          "color": "#25C900"
+        },
+        {
+          "label": "Stop Work Triggred",
+          "value": "Stop Work Triggered",
+          "color": "#000000"
+        }
+      ],
+      "required": false,
+      "disabled": false,
+      "default_previous_value": false
+    },
+    "auto_assign": false,
+    "hidden_on_dashboard": false,
+    "geometry_types": [
+      "Point",
+      "MultiPoint"
+    ],
+    "geometry_required": false,
+    "script": "\n// ------------------------------------------------------------\n// Pull specific values from battery charger inspection app into this app\n// ------------------------------------------------------------\n/*\nlet storage = STORAGE();\n\nON('load-record', () => {\n  var wo       = storage.getItem('work_order');\n  var sub      = storage.getItem('substation');\n  var feeder   = storage.getItem('feeder_circuit_id');\n  var circuit  = storage.getItem('circuit_name');\n  var voltage  = storage.getItem('voltage_kv');\n  var crewlead = storage.getItem('verified_by');\n\n  if (wo)       SETVALUE('work_order', wo);\n  if (sub)      SETVALUE('substation', sub);\n  if (feeder)   SETVALUE('feeder_circuit_', feeder);\n  if (circuit)  SETVALUE('circuit_name', circuit);\n  if (voltage)  SETVALUE('voltage_kv', voltage);\n  if (crewlead) SETVALUE('crew_lead', crewlead);\n\n  storage.removeItem('work_order');\n  storage.removeItem('substation');\n  storage.removeItem('feeder_circuit_id');\n  storage.removeItem('circuit_name');\n  storage.removeItem('voltage_kv');\n  storage.removeItem('verified_by');\n});\n*/\n// ------------------------------------------------------------\n// Safety Form status automation\n// ------------------------------------------------------------\n\nvar REQUIRED_YESNO_FIELDS = [\n  // Scope & Conditions\n  'site_walkdown_completed',\n  'pre_job_briefing_completed',\n\n  // Hazard Checklist\n  'electrical_arc_flash',\n  'fall_hazard',\n  'vehicle_traffic',\n  'lifting_rigging',\n  'confined_space',\n  'hot_work',\n  'slip_trip',\n  'pinch_points',\n  'stored_energy',\n  'hazardous_wildlife_insects',\n\n  // Controls / PPE / Permits\n  'loto_required',\n  'switching_clearance_required',\n  'confined_space_permit_required',\n  'hot_work_permit_required',\n  'traffic_control_required'\n];\n\n// Only yes/no count as completed\nfunction isAnsweredYesNo(value) {\n  return value === 'yes' || value === 'no';\n}\n\nfunction allAnswered() {\n  for (var i = 0; i < REQUIRED_YESNO_FIELDS.length; i++) {\n    var val = VALUE(REQUIRED_YESNO_FIELDS[i]);\n    if (!isAnsweredYesNo(val)) {\n      return false;\n    }\n  }\n  return true;\n}\n\nfunction updateStatus() {\n\n  // 1️⃣ Any interaction → In Progress\n  if (STATUS() === 'Incomplete') {\n    SETSTATUS('In Progress');\n  }\n\n  // 2️⃣ All answered → Complete\n  if (allAnswered()) {\n    SETSTATUS('Complete');\n  }\n}\n\n// Run on load (handles records reopened later)\nON('load-record', function (event) {\n  if (allAnswered()) {\n    SETSTATUS('Complete');\n  }\n});\n\n// Run whenever one of the tracked fields changes\nREQUIRED_YESNO_FIELDS.forEach(function (fieldName) {\n  ON('change', fieldName, function (event) {\n    updateStatus();\n  });\n});\n\n// ------------------------------------------------------------\n// Changes the Fulcrum status to Stop Work Triggered\n// ------------------------------------------------------------\n\nON('change', 'stop_work_triggered', function(event) {\n  if ($stop_work_triggered === 'yes') {\n    SETSTATUS('Stop Work Triggered');\n  }\n});\n\n// ------------------------------------------------------------\n// OPENEXTENSIONS DEMO for High Energy Hazard Selections\n// ------------------------------------------------------------\n\nON('click', 'select_high_energy_hazards', () => {\n  OPENEXTENSION({\n    url: 'https://high-energy-icon-selector.netlify.app/',\n    title: 'High Energy Hazards',\n    data: { high_energy_hazards: $high_energy_hazards },\n    onMessage: ({ data }) => {\n      SETVALUE('high_energy_hazards', data.high_energy_hazards);\n    }\n  });\n});",
+    "elements": [
+      {
+        "type": "TextField",
+        "key": "6684",
+        "label": "Work Order / Ticket #",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "work_order",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "numeric": false,
+        "pattern": null,
+        "pattern_description": null,
+        "min_length": null,
+        "max_length": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "TextField",
+        "key": "20d3",
+        "label": "Substation",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "substation",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "numeric": false,
+        "pattern": null,
+        "pattern_description": null,
+        "min_length": null,
+        "max_length": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "TextField",
+        "key": "734e",
+        "label": "Feeder / Circuit #",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "feeder_circuit_",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "numeric": false,
+        "pattern": null,
+        "pattern_description": null,
+        "min_length": null,
+        "max_length": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "TextField",
+        "key": "6218",
+        "label": "Circuit Name",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "circuit_name",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "numeric": false,
+        "pattern": null,
+        "pattern_description": null,
+        "min_length": null,
+        "max_length": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "TextField",
+        "key": "9d50",
+        "label": "Voltage (kV)",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "voltage_kv",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "numeric": true,
+        "format": "decimal",
+        "min": null,
+        "max": null,
+        "min_length": null,
+        "max_length": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "DateTimeField",
+        "key": "b2a0",
+        "label": "Date",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "date",
+        "default_value": "now",
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "TextField",
+        "key": "1478",
+        "label": "Crew Lead",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "crew_lead",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "numeric": false,
+        "pattern": null,
+        "pattern_description": null,
+        "min_length": null,
+        "max_length": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "TextField",
+        "key": "5000",
+        "label": "Weather Condition",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "weather_condition",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "numeric": false,
+        "pattern": null,
+        "pattern_description": null,
+        "min_length": null,
+        "max_length": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "TextField",
+        "key": "b600",
+        "label": "Temperature",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "temperature",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "numeric": false,
+        "pattern": null,
+        "pattern_description": null,
+        "min_length": null,
+        "max_length": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "ChoiceField",
+        "key": "2930",
+        "label": "Crew Members",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "crew_members",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "ai_prompt": null,
+        "multiple": true,
+        "allow_other": true,
+        "choices": [
+          {
+            "label": "Andy Stewart",
+            "value": "Andy Stewart"
+          },
+          {
+            "label": "Kelly Brashear",
+            "value": "Kelly Brashear"
+          },
+          {
+            "label": "Meg Hood",
+            "value": "Meg Hood"
+          },
+          {
+            "label": "John Smith",
+            "value": "John Smith"
+          },
+          {
+            "label": "Hank Reynolds",
+            "value": "Hank Reynolds"
+          }
+        ],
+        "min_length": null,
+        "max_length": null,
+        "default_previous_value": false
+      },
+      {
+        "type": "Section",
+        "key": "5f70",
+        "label": "Scope & Conditions",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "scope_conditions",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "display": "inline",
+        "elements": [
+          {
+            "type": "TextField",
+            "key": "da00",
+            "label": "Work Description",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "work_description",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": "Instructions: Please make sure the first letter is capitalized.",
+            "numeric": false,
+            "pattern": null,
+            "pattern_description": null,
+            "min_length": null,
+            "max_length": null,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "7fc4",
+            "label": "Site Walkdown Completed?",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "site_walkdown_completed",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "b5e0",
+            "label": "Pre-Job Briefing Completed?",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "pre_job_briefing_completed",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "TextField",
+            "key": "bd90",
+            "label": "Briefing Notes",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "briefing_notes",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "numeric": false,
+            "pattern": null,
+            "pattern_description": null,
+            "min_length": null,
+            "max_length": null,
+            "default_previous_value": false
+          }
+        ]
+      },
+      {
+        "type": "Section",
+        "key": "19e8",
+        "label": "High Energy Hazard Checklist",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "high_energy_hazard_checklist",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "display": "inline",
+        "elements": [
+          {
+            "type": "HyperlinkField",
+            "key": "7ca0",
+            "label": "Select High Energy Hazards",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "select_high_energy_hazards",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": [],
+            "default_url": ""
+          },
+          {
+            "type": "TextField",
+            "key": "33e0",
+            "label": "High Energy Hazards",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "high_energy_hazards",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "numeric": false,
+            "pattern": null,
+            "pattern_description": null,
+            "min_length": null,
+            "max_length": null,
+            "default_previous_value": false
+          }
+        ]
+      },
+      {
+        "type": "Section",
+        "key": "4c6f",
+        "label": "Standard Hazard Checklist",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "standard_hazard_checklist",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "display": "drilldown",
+        "elements": [
+          {
+            "type": "YesNoField",
+            "key": "a7e0",
+            "label": "Electrical / Arc Flash",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "electrical_arc_flash",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "e5e0",
+            "label": "Fall Hazard",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "fall_hazard",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "34f1",
+            "label": "Vehicle / Traffic",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "vehicle_traffic",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "27cd",
+            "label": "Lifting / Rigging",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "lifting_rigging",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "04b0",
+            "label": "Confined Space",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "confined_space",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "674a",
+            "label": "Hot Work",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "hot_work",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "72d2",
+            "label": "Slip / Trip",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "slip_trip",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "5ea0",
+            "label": "Pinch Points",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "pinch_points",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "8300",
+            "label": "Stored Energy",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "stored_energy",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "3360",
+            "label": "Hazardous Wildlife / Insects",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "hazardous_wildlife_insects",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "TextField",
+            "key": "7a00",
+            "label": "Describe other hazards",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "describe_other_hazards",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "numeric": false,
+            "pattern": null,
+            "pattern_description": null,
+            "min_length": null,
+            "max_length": null,
+            "default_previous_value": false
+          }
+        ]
+      },
+      {
+        "type": "Section",
+        "key": "99a0",
+        "label": "Controls / PPE / Permit",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "controls_ppe_permit",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "display": "inline",
+        "elements": [
+          {
+            "type": "ChoiceField",
+            "key": "d050",
+            "label": "PPE Required",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "ppe_required",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "multiple": true,
+            "allow_other": true,
+            "choices": [
+              {
+                "label": "Hard hat",
+                "value": "Hard hat"
+              },
+              {
+                "label": "Glasses",
+                "value": "Glasses"
+              },
+              {
+                "label": "FR",
+                "value": "FR"
+              },
+              {
+                "label": "Gloves",
+                "value": "Gloves"
+              },
+              {
+                "label": "Hearing",
+                "value": "Hearing"
+              },
+              {
+                "label": "Fall protection",
+                "value": "Fall protection"
+              }
+            ],
+            "min_length": null,
+            "max_length": null,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "42bf",
+            "label": "LOTO Required?",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "loto_required",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "f160",
+            "label": "Switching / Clearance Required?",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "switching_clearance_required",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "19ae",
+            "label": "Confined Space Permit Required?",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "confined_space_permit_required",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "b7f0",
+            "label": "Hot Work Permit Required?",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "hot_work_permit_required",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "9270",
+            "label": "Traffic Control Required?",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "traffic_control_required",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "TextField",
+            "key": "515b",
+            "label": "Permit numbers (if any)",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "permit_numbers_if_any",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "numeric": false,
+            "pattern": null,
+            "pattern_description": null,
+            "min_length": null,
+            "max_length": null,
+            "default_previous_value": false
+          }
+        ]
+      },
+      {
+        "type": "Repeatable",
+        "key": "57ac",
+        "label": "Crew Sign-Off",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "crew_sign_off",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "elements": [
+          {
+            "type": "TextField",
+            "key": "489e",
+            "label": "Crew Members Full Name",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "crew_members_full_name",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "numeric": false,
+            "pattern": null,
+            "pattern_description": null,
+            "min_length": null,
+            "max_length": null,
+            "default_previous_value": false
+          },
+          {
+            "type": "ChoiceField",
+            "key": "3ea0",
+            "label": "Role",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "role",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "multiple": false,
+            "allow_other": false,
+            "choices": [
+              {
+                "label": "Troubleman",
+                "value": "Troubleman"
+              },
+              {
+                "label": "Foreman",
+                "value": "Foreman"
+              },
+              {
+                "label": "Technician",
+                "value": "Technician"
+              },
+              {
+                "label": "Contractor",
+                "value": "Contractor"
+              }
+            ],
+            "default_previous_value": false
+          },
+          {
+            "type": "SignatureField",
+            "key": "3800",
+            "label": "Signature",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "signature",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "agreement_text": ""
+          }
+        ],
+        "title_field_key": null,
+        "title_field_keys": [
+          "489e"
+        ],
+        "geometry_types": [
+          "Point",
+          "MultiPoint"
+        ],
+        "geometry_required": false,
+        "min_length": null,
+        "max_length": null
+      },
+      {
+        "type": "Section",
+        "key": "e250",
+        "label": "Attachments & Notes",
+        "description": null,
+        "required": false,
+        "disabled": false,
+        "hidden": false,
+        "data_name": "attachments_notes",
+        "default_value": null,
+        "visible_conditions_type": null,
+        "visible_conditions_behavior": "clear",
+        "visible_conditions": null,
+        "required_conditions_type": null,
+        "required_conditions": null,
+        "display": "inline",
+        "elements": [
+          {
+            "type": "PhotoField",
+            "key": "5240",
+            "label": "Photos",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "photos",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "min_length": null,
+            "max_length": null,
+            "annotations_enabled": false,
+            "deidentification_enabled": false,
+            "timestamp_enabled": false,
+            "latlongstamp_enabled": false,
+            "ai_prompt": null
+          },
+          {
+            "type": "VideoField",
+            "key": "47b0",
+            "label": "Videos",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "videos",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "track_enabled": true,
+            "audio_enabled": true,
+            "min_length": null,
+            "max_length": null
+          },
+          {
+            "type": "TextField",
+            "key": "5dd2",
+            "label": "Notes",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "notes",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "numeric": false,
+            "pattern": null,
+            "pattern_description": null,
+            "min_length": null,
+            "max_length": null,
+            "default_previous_value": false
+          },
+          {
+            "type": "YesNoField",
+            "key": "3ff0",
+            "label": "Stop Work Triggered?",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "stop_work_triggered",
+            "default_value": null,
+            "visible_conditions_type": null,
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": null,
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "positive": {
+              "label": "Yes",
+              "value": "yes"
+            },
+            "negative": {
+              "label": "No",
+              "value": "no"
+            },
+            "neutral": {
+              "label": "N/A",
+              "value": "n/a"
+            },
+            "neutral_enabled": false,
+            "default_previous_value": false
+          },
+          {
+            "type": "TextField",
+            "key": "4d00",
+            "label": "Stop work reason / resolution?",
+            "description": null,
+            "required": false,
+            "disabled": false,
+            "hidden": false,
+            "data_name": "stop_work_reason_resolution",
+            "default_value": null,
+            "visible_conditions_type": "all",
+            "visible_conditions_behavior": "clear",
+            "visible_conditions": [
+              {
+                "field_key": "3ff0",
+                "operator": "equal_to",
+                "value": "yes"
+              }
+            ],
+            "required_conditions_type": null,
+            "required_conditions": null,
+            "ai_prompt": null,
+            "numeric": false,
+            "pattern": null,
+            "pattern_description": null,
+            "min_length": null,
+            "max_length": null,
+            "default_previous_value": false
+          }
+        ]
+      }
+    ],
+    "image": "https://content.fulcrumapp.com/form-images/e1aa22ac-2790-45af-8851-eb9de768a50c-2d6cf124-f16a-41f9-8c8a-04e27b120c31%282%29.png?Expires=1776909103&Signature=dw5zMZAcaBH1fsmIcIb26yxASfMWMqb-p4LJNBll867PBlwr6KrqdMXCZpftB5kG9iUXzXsaJuomyoTQC6eH9dolpc3b8mvDKhhbFxcLJ0jDmUb~MqeEWp0DSsAeK3ycDTQJ5e-iRT9QI3wjul4vwEQYXCIlxLmSlTN66mZ1194JOtbHJJftWGOzdF~QbKwJitwSzb3dG1zOHKOoK266XCqgQ~HkO0U8dAzxcLb5fbFMvcq-LDdD4bh1I4m22HYuobfG0WvgC9jyZqWXl8A6uhCQ65Je1k0QlF5E2Mz0hWAN459VRTw8gHqB4L-VuW3GU3I1mPDyE0tIuoASkrpowA__&Key-Pair-Id=K1J5KALR9YAJQS",
+    "id": "e1aa22ac-2790-45af-8851-eb9de768a50c"
+  },
+  "records": {},
+  "report_templates": [],
+  "workflows": []
+}
